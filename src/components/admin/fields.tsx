@@ -27,7 +27,7 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 // Client-side image compression using Canvas
-// Downscales large photos to max 1600px width/height and quality 0.85
+// Downscales photos to max 1600px dimension and 85% JPEG/PNG quality
 // This ensures images upload in under a second directly to NEON PostgreSQL
 async function compressImage(
   file: File,
@@ -105,7 +105,7 @@ export async function uploadFile(
     }
   } else {
     payload = {
-      name: input.name || "cropped-image.jpg",
+      name: input.name || "image.jpg",
       mime: input.mime || "image/jpeg",
       data: input.base64,
     };
@@ -177,15 +177,11 @@ function CropDialog({
     setBusy(true);
 
     try {
-      const fw = frame.clientWidth;
-      const fh = frame.clientHeight;
+      const fw = frame.clientWidth || 400;
+      const fh = frame.clientHeight || Math.round(fw / aspect);
       const fs = Math.max(fw / img.naturalWidth, fh / img.naturalHeight) * scale;
       const rw = img.naturalWidth * fs;
-      const perPx = img.naturalWidth / rw;
-      const sx = ((rw - fw) / 2 - offset.x) * perPx;
-      const sy = ((img.naturalHeight * fs - fh) / 2 - offset.y) * perPx;
-      const sw = fw * perPx;
-      const sh = fh * perPx;
+      const rh = img.naturalHeight * fs;
 
       const outW = 1400;
       const outH = Math.round(1400 / aspect);
@@ -195,7 +191,18 @@ function CropDialog({
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas context failed");
 
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+      // Fill background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, outW, outH);
+
+      // Safe draw without clipping negative coordinates
+      const ratio = outW / fw;
+      const destW = rw * ratio;
+      const destH = rh * ratio;
+      const destX = (outW - destW) / 2 + offset.x * ratio;
+      const destY = (outH - destH) / 2 + offset.y * ratio;
+
+      ctx.drawImage(img, destX, destY, destW, destH);
       const base64 = canvas.toDataURL("image/jpeg", 0.85);
 
       onDone({
@@ -337,7 +344,7 @@ export function UploadField({
     if (!file) return;
     setErr("");
 
-    // If it's an image with a specific aspect ratio, open the cropper
+    // If it's an image with an aspect ratio, open the cropper
     if (kind === "image" && aspect && file.type.startsWith("image/")) {
       setCropSrc(file);
       return;
