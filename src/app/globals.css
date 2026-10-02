@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Hind Siliguri", var(--font-hind), system-ui, -apple-system, "Nirmala UI", sans-serif;
+  --font-display: "Anek Bangla", var(--font-anek), "Hind Siliguri", var(--font-hind), system-ui, sans-serif;
+  --font-noto: "Noto Sans Bengali", var(--font-noto), "Hind Siliguri", system-ui, sans-serif;
+  --font-tiro: "Tiro Bangla", var(--font-tiro), "Noto Serif Bengali", Georgia, serif;
+
+  --color-ink: #1d1d1f;
+  --color-ink-soft: #515154;
+  --color-mist: #f5f5f7;
+  --color-blue: #0071e3;
+  --color-blue-bright: #0a84ff;
+  --color-green: #34c759;
+  --color-orange: #ff9f0a;
+  --color-red: #ff3b30;
+  --color-teal: #30d5c8;
+  --color-night: #050507;
+  --color-night-soft: #101014;
+  --color-night-card: #16161c;
+
+  --shadow-glass: 0 8px 32px rgb(31 38 135 / 0.07), inset 0 1px 0 rgb(255 255 255 / 0.55);
+  --shadow-lift: 0 24px 60px -18px rgb(0 0 0 / 0.22);
+  --shadow-soft: 0 2px 20px rgb(0 0 0 / 0.06);
+
+  --animate-marquee: marquee 32s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-14px); }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  overflow-x: clip;
+}
+
+body {
+  @apply bg-mist text-ink font-sans antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.dark body {
+  @apply bg-night text-[#f5f5f7];
+}
+
+::selection {
+  background: rgb(0 113 227 / 0.22);
+}
+
+/* ---------- Frosted glass system ---------- */
+.glass {
+  background: color-mix(in srgb, white 62%, transparent);
+  backdrop-filter: blur(26px) saturate(180%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  border: 1px solid color-mix(in srgb, white 68%, transparent);
+  box-shadow: var(--shadow-glass);
+}
+.dark .glass {
+  background: color-mix(in srgb, #17171d 58%, transparent);
+  border-color: rgb(255 255 255 / 0.1);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+.glass-strong {
+  background: color-mix(in srgb, white 80%, transparent);
+  backdrop-filter: blur(36px) saturate(200%);
+  -webkit-backdrop-filter: blur(36px) saturate(200%);
+  border: 1px solid color-mix(in srgb, white 75%, transparent);
+  box-shadow: var(--shadow-glass);
+}
+.dark .glass-strong {
+  background: color-mix(in srgb, #141419 82%, transparent);
+  border-color: rgb(255 255 255 / 0.12);
+}
+
+.card {
+  @apply rounded-[1.75rem] bg-white dark:bg-night-card;
+  border: 1px solid rgb(0 0 0 / 0.05);
+  box-shadow: var(--shadow-soft);
+}
+.dark .card {
+  border-color: rgb(255 255 255 / 0.07);
+}
+
+/* Gradient text accent */
+.text-gradient {
+  background: linear-gradient(120deg, #0071e3, #30d5c8 55%, #34c759);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Hairline divider */
+.hairline {
+  border-color: rgb(0 0 0 / 0.08);
+}
+.dark .hairline {
+  border-color: rgb(255 255 255 / 0.1);
+}
+
+/* Hide scrollbars for chip rails */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Soft focus ring */
+.focusable:focus-visible {
+  outline: 3px solid rgb(0 113 227 / 0.4);
+  outline-offset: 2px;
+}
+
+/* Marquee strip */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: var(--animate-marquee);
+}
+.marquee-paused:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Ambient page glow */
+.ambient {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.dark .ambient { opacity: 0.28; }
+
+/* Media aspect helper for masonry videos */
+video { background: #000; }
