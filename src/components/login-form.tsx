@@ -2,104 +2,138 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { User, Lock, LogIn, Loader2, LogOut } from "lucide-react";
-
-const inputCls =
-  "w-full rounded-2xl border border-black/[0.06] bg-mist px-4 py-3.5 pl-11 text-sm font-medium outline-none transition-all placeholder:text-ink-soft/50 focus:border-blue/40 focus:bg-white focus:ring-4 focus:ring-blue/10 dark:border-white/10 dark:bg-white/5 dark:focus:bg-white/10 dark:placeholder:text-white/35";
+import Link from "next/link";
+import { Lock, User, Loader2, LogIn, ArrowRight } from "lucide-react";
+import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme";
 
 export default function LoginForm({
-  endpoint,
-  redirectTo,
-  title,
-  subtitle,
+  mode,
+  hint,
+  clubLogo = "",
+  clubName = "",
 }: {
-  endpoint: string;
-  redirectTo: string;
-  title: string;
-  subtitle: string;
+  mode: "admin" | "member";
+  hint?: { u: string; p: string };
+  clubLogo?: string;
+  clubName?: string;
 }) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setErr("");
+    setError("");
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "লগইন ব্যর্থ হয়েছে");
-      router.replace(redirectTo);
+      if (!res.ok) {
+        setError(data.error || "লগইন ব্যর্থ");
+        return;
+      }
+      if (mode === "admin" && (data.role === "superadmin" || data.role === "super_admin" || data.role === "editor")) {
+        router.push("/admin");
+      } else {
+        router.push(mode === "admin" ? "/admin" : "/profile");
+      }
       router.refresh();
-    } catch (error: unknown) {
-      setErr(error instanceof Error ? error.message : "লগইন ব্যর্থ হয়েছে");
+    } catch {
+      setError("সংযোগ ত্রুটি — আবার চেষ্টা করুন");
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <motion.form
-      onSubmit={submit}
-      initial={{ opacity: 0, y: 24, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: "spring", stiffness: 120, damping: 20 }}
-      className="glass mx-auto w-full max-w-md rounded-[2rem] p-7 sm:p-9"
-    >
-      <div className="text-center">
-        <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-black/[0.06] text-ink dark:bg-white/10 dark:text-white">
-          <Lock className="size-6" />
-        </span>
-        <h1 className="font-display mt-4 text-2xl font-extrabold">{title}</h1>
-        <p className="mt-1.5 text-sm text-ink-soft dark:text-white/55">{subtitle}</p>
+    <div className="dot-grid flex min-h-dvh flex-col items-center justify-center px-4 py-10">
+      <div className="fixed right-4 top-4">
+        <ThemeToggle />
       </div>
-      <div className="mt-7 space-y-4">
-        <div className="relative">
-          <User className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-ink-soft/70 dark:text-white/40" />
-          <input required value={username} onChange={(e) => setUsername(e.target.value)}
-            placeholder="ইউজারনেম" className={inputCls} autoComplete="username" />
+      <Link href="/" className="mb-6 flex items-center gap-2 text-[13.5px] font-medium" style={{ color: "var(--ink-3)" }}>
+        <ArrowRight className="h-4 w-4" /> হোমে ফিরুন
+      </Link>
+      <div className="glass-strong w-full max-w-md rounded-[2rem] p-8 shadow-[var(--shadow-lift)] sm:p-10" style={{ animation: "loginIn .7s cubic-bezier(.22,1,.36,1) both" }}>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="float-soft"><Logo size={56} src={clubLogo} alt={clubName || "ক্লাব লোগো"} /></span>
+          {clubName && <p className="mt-3 text-[13px] font-semibold" style={{ color: "var(--ink-2)" }}>{clubName}</p>}
+          <h1 className="mt-5 text-[22px] font-bold tracking-tight">
+            {mode === "admin" ? "অ্যাডমিন প্যানেল" : "সদস্য লগইন"}
+          </h1>
+          <p className="mt-1.5 text-[13px]" style={{ color: "var(--ink-3)" }}>
+            {mode === "admin"
+              ? "ওয়েবসাইট পরিচালনা করতে লগইন করুন"
+              : "আপনার পোর্টফোলিও ও অভ্যন্তরীণ কনটেন্ট দেখুন"}
+          </p>
         </div>
-        <div className="relative">
-          <Lock className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-ink-soft/70 dark:text-white/40" />
-          <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-            placeholder="পাসওয়ার্ড" className={inputCls} autoComplete="current-password" />
-        </div>
-      </div>
-      {err && (
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="mt-4 rounded-2xl bg-red/10 px-4 py-3 text-center text-sm font-bold text-red">
-          {err}
-        </motion.p>
-      )}
-      <button type="submit" disabled={loading}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue to-blue-bright py-3.5 text-sm font-extrabold text-white shadow-lg shadow-blue/30 transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70">
-        {loading ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
-        {loading ? "যাচাই হচ্ছে..." : "লগইন করুন"}
-      </button>
-    </motion.form>
-  );
-}
 
-export function LogoutButton({ endpoint, label }: { endpoint: string; label: string }) {
-  const router = useRouter();
-  return (
-    <button
-      onClick={async () => {
-        await fetch(endpoint, { method: "DELETE" });
-        router.replace("/");
-        router.refresh();
-      }}
-      className="glass inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold text-red transition-transform hover:scale-105 active:scale-95"
-    >
-      <LogOut className="size-3.5" />
-      {label}
-    </button>
+        <form onSubmit={submit} className="space-y-4">
+          <label className="block">
+            <span className="mb-1.5 block text-[12.5px] font-semibold" style={{ color: "var(--ink-2)" }}>
+              ইউজারনেম
+            </span>
+            <div className="relative">
+              <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: "var(--ink-3)" }} />
+              <input
+                className="field !pl-11"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="আপনার ইউজারনেম"
+                autoComplete="username"
+                required
+              />
+            </div>
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-[12.5px] font-semibold" style={{ color: "var(--ink-2)" }}>
+              পাসওয়ার্ড
+            </span>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: "var(--ink-3)" }} />
+              <input
+                className="field !pl-11"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+          </label>
+
+          {error && (
+            <p className="rounded-xl bg-red-500/10 px-4 py-2.5 text-[13px] font-medium text-red-500 animate-shake">
+              {error}
+            </p>
+          )}
+
+          <button type="submit" disabled={loading} className="btn-brand w-full !py-3.5 disabled:opacity-60">
+            {loading ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <LogIn className="h-4.5 w-4.5" />}
+            লগইন করুন
+          </button>
+        </form>
+
+        {hint && (
+          <div className="mt-6 rounded-2xl bg-black/[0.04] px-4 py-3 text-center text-[12px] leading-relaxed dark:bg-white/5" style={{ color: "var(--ink-3)" }}>
+            ডেমো অ্যাক্সেস — ইউজারনেম: <b className="text-[var(--ink-2)]">{hint.u}</b> · পাসওয়ার্ড:{" "}
+            <b className="text-[var(--ink-2)]">{hint.p}</b>
+          </div>
+        )}
+      </div>
+      <style jsx>{`
+        @keyframes loginIn {
+          from { opacity: 0; transform: translateY(30px) scale(.97); filter: blur(6px); }
+          to { opacity: 1; transform: none; filter: none; }
+        }
+      `}</style>
+    </div>
   );
 }

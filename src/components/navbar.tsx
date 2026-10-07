@@ -3,228 +3,323 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { Atom, ChevronDown, Menu, X, Search, Sparkles } from "lucide-react";
-import ThemeToggle from "./theme-toggle";
-import { cn } from "@/lib/utils";
+import {
+  Search,
+  Menu,
+  X,
+  Loader2,
+  Trophy,
+  Users,
+  FlaskConical,
+  Newspaper,
+  FolderDown,
+  ArrowUpLeft,
+  Command,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/theme";
+import { Logo } from "@/components/logo";
+import { CLUB } from "@/lib/utils";
 
-const mainLinks = [
-  { href: "/", label: "হোম" },
+const LINKS = [
   { href: "/achievements", label: "অর্জন" },
-  { href: "/members", label: "নেতৃবৃন্দ" },
+  { href: "/members", label: "সদস্য" },
   { href: "/projects", label: "প্রকল্প" },
-  { href: "/gallery", label: "গ্যালারি" },
-];
-
-const moreLinks = [
+  { href: "/gallery", label: "গ্যালারী" },
   { href: "/hall-of-fame", label: "হল অফ ফেম" },
-  { href: "/news", label: "সংবাদ ও ঘোষণা" },
-  { href: "/resources", label: "রিসোর্স লাইব্রেরি" },
-  { href: "/events", label: "ইভেন্টস ও ক্যালেন্ডার" },
-  { href: "/about", label: "আমাদের সম্পর্কে" },
-  { href: "/contact", label: "যোগাযোগ" },
-  { href: "/login", label: "সদস্য লগইন" },
+  { href: "/resources", label: "রিসোর্স" },
+  { href: "/news", label: "সংবাদ" },
+  { href: "/about", label: "সম্পর্কে" },
 ];
 
-export default function Navbar({ clubName, logoUrl }: { clubName: string; logoUrl: string }) {
+type SearchGroups = {
+  achievements: { id: number; title: string; sub?: string | null }[];
+  members: { id: number; title: string; sub?: string | null }[];
+  projects: { id: number; title: string; sub?: string | null }[];
+  news: { id: number; title: string; sub?: string | null }[];
+  resources: { id: number; title: string; sub?: string | null }[];
+};
+
+const GROUP_META: Record<
+  keyof SearchGroups,
+  { label: string; href: (id: number) => string; icon: typeof Trophy }
+> = {
+  achievements: { label: "অর্জন", href: (id) => `/achievements/${id}`, icon: Trophy },
+  members: { label: "সদস্য", href: (id) => `/members/${id}`, icon: Users },
+  projects: { label: "প্রকল্প", href: (id) => `/projects/${id}`, icon: FlaskConical },
+  news: { label: "সংবাদ", href: () => `/news`, icon: Newspaper },
+  resources: { label: "রিসোর্স", href: () => `/resources`, icon: FolderDown },
+};
+
+export default function Navbar({
+  clubLogo = "",
+  schoolLogo = "",
+  clubName,
+  schoolName,
+}: {
+  clubLogo?: string;
+  schoolLogo?: string;
+  clubName?: string;
+  schoolName?: string;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
-  const searchRef = useRef<HTMLInputElement>(null);
-  const { scrollY } = useScroll();
-  useMotionValueEvent(scrollY, "change", (v) => setScrolled(v > 12));
+  const [loading, setLoading] = useState(false);
+  const [groups, setGroups] = useState<SearchGroups | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => setMobileOpen(false), [pathname]);
   useEffect(() => {
-    if (searchOpen) searchRef.current?.focus();
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => setOpen(false), [pathname]);
+
+  // Body scroll lock when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = open || searchOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open, searchOpen]);
+
+  // Global "open search" event (used by mobile bottom bar)
+  useEffect(() => {
+    const handler = () => setSearchOpen(true);
+    window.addEventListener("sc:open-search", handler);
+    return () => window.removeEventListener("sc:open-search", handler);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if (e.key === "Escape") setSearchOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => inputRef.current?.focus(), 60);
+    else {
+      setQ("");
+      setGroups(null);
+    }
   }, [searchOpen]);
 
-  const submitSearch = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!q.trim()) return;
+  useEffect(() => {
+    if (!q.trim()) {
+      setGroups(null);
+      return;
+    }
+    const t = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        setGroups(data.groups);
+      } finally {
+        setLoading(false);
+      }
+    }, 220);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  const goResult = (href: string) => {
     setSearchOpen(false);
-    router.push(`/search?q=${encodeURIComponent(q.trim())}`);
+    router.push(href);
   };
 
-  const isAdmin = pathname.startsWith("/admin");
-
   return (
-    <motion.header
-      initial={{ y: -80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 120, damping: 20 }}
-      className="fixed inset-x-0 top-0 z-50 px-3 sm:px-5"
-    >
-      <div
-        className={cn(
-          "mx-auto mt-3 flex max-w-6xl items-center gap-2 rounded-full px-3 py-2 transition-all duration-500 sm:px-4",
-          scrolled ? "glass-strong shadow-lg" : "glass"
-        )}
-      >
-        <Link href="/" className="focusable flex min-w-0 items-center gap-2.5 rounded-full">
-          <span className="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-ink text-white dark:bg-white dark:text-night">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="ক্লাব লোগো" className="size-full object-cover" />
-            ) : (
-              <Atom className="size-5 animate-[spin_12s_linear_infinite]" />
+    <>
+      <nav className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5">
+        <div
+          className={`mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 rounded-2xl px-4 transition-all duration-500 ease-apple ${
+            scrolled ? "glass-strong shadow-[var(--shadow-soft)]" : "glass border-transparent bg-transparent backdrop-blur-0"
+          }`}
+          style={scrolled ? undefined : { borderColor: "transparent", background: "transparent", backdropFilter: "none", WebkitBackdropFilter: "none" }}
+        >
+          <Link href="/" className="flex min-w-0 items-center gap-2.5 transition-transform duration-300 hover:scale-[1.02]">
+            <Logo size={36} src={clubLogo} alt={clubName || CLUB.name} />
+            {schoolLogo && (
+              <img src={schoolLogo} alt={schoolName || CLUB.full} className="hidden h-8 w-8 shrink-0 rounded-[22%] object-contain sm:block" />
             )}
-          </span>
-          <span className="hidden min-w-0 flex-col leading-tight sm:flex">
-            <span className="font-display max-w-[220px] truncate text-[15px] font-bold tracking-tight">
-              {clubName}
+            <span className="hidden min-w-0 leading-tight xs:block sm:block">
+              <span className="block truncate text-[14.5px] font-bold tracking-tight">{clubName || CLUB.name}</span>
+              <span className="block truncate text-[10px]" style={{ color: "var(--ink-3)" }}>
+                {schoolName || CLUB.full}
+              </span>
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-ink-soft dark:text-white/60">
-              science-club.bussscr
-            </span>
-          </span>
-        </Link>
+          </Link>
 
-        <nav className="ml-auto hidden items-center gap-0.5 lg:flex">
-          {mainLinks.map((l) => {
-            const active = pathname === l.href;
-            return (
+          <div className="hidden items-center gap-0.5 lg:flex">
+            {LINKS.map((l) => {
+              const active = pathname === l.href || pathname.startsWith(l.href + "/");
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={`relative rounded-full px-3 py-2 text-[13.5px] font-medium transition-all duration-300 hover:bg-black/5 dark:hover:bg-white/10 ${
+                    active ? "text-[var(--brand)]" : ""
+                  }`}
+                >
+                  {l.label}
+                  {active && (
+                    <span className="absolute inset-x-3 -bottom-[1px] h-[2.5px] rounded-full bg-gradient-to-r from-[#0a84ff] to-[#30d158]" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="সার্চ"
+              className="glass group flex h-10 items-center gap-2 rounded-full px-3.5 transition-all duration-300 hover:scale-[1.03] active:scale-95"
+            >
+              <Search className="h-4 w-4" style={{ color: "var(--ink-2)" }} />
+              <span className="hidden text-[13px] md:block" style={{ color: "var(--ink-3)" }}>
+                সার্চ করুন…
+              </span>
+              <span className="hidden items-center gap-0.5 rounded-md bg-black/5 px-1.5 py-0.5 text-[10px] dark:bg-white/10 md:flex" style={{ color: "var(--ink-3)" }}>
+                <Command className="h-2.5 w-2.5" />K
+              </span>
+            </button>
+            <ThemeToggle />
+            <Link href="/join" className="btn-brand hidden !px-5 !py-2.5 text-sm md:inline-flex">
+              যোগ দিন
+            </Link>
+            <button
+              aria-label="মেনু"
+              onClick={() => setOpen(!open)}
+              className="glass grid h-10 w-10 place-items-center rounded-full transition-transform active:scale-90 lg:hidden"
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        <div
+          className={`mx-auto mt-2 max-w-6xl overflow-hidden rounded-3xl transition-all duration-500 ease-apple lg:hidden ${
+            open ? "glass-strong max-h-[70vh] opacity-100 shadow-[var(--shadow-lift)]" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="grid grid-cols-2 gap-1.5 p-4">
+            {[...LINKS, { href: "/contact", label: "যোগাযোগ" }, { href: "/events", label: "ইভেন্ট" }].map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
-                className={cn(
-                  "focusable relative rounded-full px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-ink dark:text-white/70 dark:hover:text-white",
-                  active && "text-ink dark:text-white"
-                )}
+                className="rounded-2xl bg-black/[0.03] px-4 py-3.5 text-[14px] font-medium transition-colors hover:bg-black/[0.06] dark:bg-white/5 dark:hover:bg-white/10"
               >
-                {active && (
-                  <motion.span
-                    layoutId="nav-pill"
-                    className="absolute inset-0 rounded-full bg-black/[0.06] dark:bg-white/10"
-                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                  />
-                )}
-                <span className="relative">{l.label}</span>
+                {l.label}
               </Link>
-            );
-          })}
-          <div className="relative">
-            <button
-              onClick={() => setMoreOpen((v) => !v)}
-              onBlur={() => setTimeout(() => setMoreOpen(false), 180)}
-              className="focusable flex items-center gap-1 rounded-full px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-ink dark:text-white/70 dark:hover:text-white"
-            >
-              আরও
-              <ChevronDown className={cn("size-3.5 transition-transform duration-300", moreOpen && "rotate-180")} />
-            </button>
-            <AnimatePresence>
-              {moreOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                  transition={{ type: "spring", stiffness: 380, damping: 28 }}
-                  className="glass-strong absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-3xl p-2"
-                >
-                  {moreLinks.map((l) => (
-                    <Link
-                      key={l.href}
-                      href={l.href}
-                      className="block rounded-2xl px-4 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:bg-black/[0.05] hover:text-ink dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
-                    >
-                      {l.label}
-                    </Link>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            ))}
+            <Link href="/join" className="btn-brand col-span-2 mt-1">যোগ দিন</Link>
+            <div className="col-span-2 mt-1 flex gap-2">
+              <Link href="/login" className="btn-glass flex-1 !py-2.5 text-sm">সদস্য লগইন</Link>
+              <Link href="/contact" className="btn-glass flex-1 !py-2.5 text-sm">যোগাযোগ</Link>
+            </div>
           </div>
-        </nav>
+        </div>
+      </nav>
 
-        <div className="ml-auto flex items-center gap-1.5 lg:ml-2">
-          <AnimatePresence>
-            {searchOpen ? (
-              <motion.form
-                key="search"
-                onSubmit={submitSearch}
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 170, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                className="glass flex h-10 items-center overflow-hidden rounded-full"
+      {/* Search overlay */}
+      <div
+        className={`fixed inset-0 z-[70] transition-all duration-300 ${
+          searchOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      >
+        <div
+          className="absolute inset-0 bg-black/25 backdrop-blur-md"
+          onClick={() => setSearchOpen(false)}
+        />
+        <div
+          className={`absolute inset-x-0 top-0 mx-auto max-w-2xl px-4 pt-24 transition-all duration-500 ease-spring ${
+            searchOpen ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
+          }`}
+        >
+          <div className="glass-strong overflow-hidden rounded-3xl shadow-[var(--shadow-lift)]">
+            <div className="flex items-center gap-3 border-b px-5 py-4">
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" style={{ color: "var(--brand)" }} />
+              ) : (
+                <Search className="h-5 w-5" style={{ color: "var(--ink-3)" }} />
+              )}
+              <input
+                ref={inputRef}
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="অর্জন, সদস্য, প্রকল্প, সংবাদ — সব খুঁজুন…"
+                className="w-full bg-transparent text-[17px] font-medium outline-none placeholder:opacity-50"
+              />
+              <button
+                onClick={() => setSearchOpen(false)}
+                className="rounded-lg border px-2 py-1 text-[11px] font-medium"
+                style={{ color: "var(--ink-3)" }}
               >
-                <input
-                  ref={searchRef}
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="খুঁজুন..."
-                  className="w-full bg-transparent px-3.5 text-sm outline-none placeholder:text-ink-soft/60 dark:placeholder:text-white/40"
-                />
-              </motion.form>
-            ) : null}
-          </AnimatePresence>
-          <button
-            aria-label="সার্চ"
-            onClick={() => (searchOpen ? submitSearch() : setSearchOpen(true))}
-            className="focusable grid size-10 place-items-center rounded-full glass transition-transform hover:scale-105 active:scale-95"
-          >
-            <Search className="size-[17px]" />
-          </button>
-          <ThemeToggle />
-          <Link
-            href="/join"
-            className="focusable hidden items-center gap-1.5 rounded-full bg-gradient-to-r from-blue to-blue-bright px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue/25 transition-transform hover:scale-[1.04] active:scale-95 md:flex"
-          >
-            <Sparkles className="size-4" />
-            যোগ দিন
-          </Link>
-          <button
-            aria-label="মেনু"
-            onClick={() => setMobileOpen((v) => !v)}
-            className="focusable grid size-10 place-items-center rounded-full glass transition-transform active:scale-95 lg:hidden"
-          >
-            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
+                ESC
+              </button>
+            </div>
+            <div className="max-h-[55vh] overflow-y-auto p-3">
+              {!groups && !q && (
+                <p className="px-4 py-10 text-center text-sm" style={{ color: "var(--ink-3)" }}>
+                  পুরো ওয়েবসাইট জুড়ে সার্চ করুন — যেমন "রোবট", "স্বর্ণপদক", "আরিফুল"
+                </p>
+              )}
+              {groups &&
+                (Object.keys(groups) as (keyof SearchGroups)[]).map((key) => {
+                  const list = groups[key];
+                  if (!list?.length) return null;
+                  const meta = GROUP_META[key];
+                  const Icon = meta.icon;
+                  return (
+                    <div key={key} className="mb-1">
+                      <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--ink-3)" }}>
+                        {meta.label}
+                      </p>
+                      {list.map((item) => (
+                        <button
+                          key={`${key}-${item.id}`}
+                          onClick={() => goResult(meta.href(item.id))}
+                          className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                        >
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--brand)_12%,transparent)]">
+                            <Icon className="h-4 w-4" style={{ color: "var(--brand)" }} />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[14.5px] font-semibold">{item.title}</span>
+                            {item.sub && (
+                              <span className="block truncate text-xs" style={{ color: "var(--ink-3)" }}>
+                                {item.sub}
+                              </span>
+                            )}
+                          </span>
+                          <ArrowUpLeft className="h-4 w-4 shrink-0" style={{ color: "var(--ink-3)" }} />
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })}
+              {groups &&
+                Object.values(groups).every((g) => !g?.length) && (
+                  <p className="px-4 py-10 text-center text-sm" style={{ color: "var(--ink-3)" }}>
+                    কিছু পাওয়া যায়নি — অন্য কিছু লিখে দেখুন
+                  </p>
+                )}
+            </div>
+          </div>
         </div>
       </div>
-
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.nav
-            initial={{ opacity: 0, y: -10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="glass-strong mx-auto mt-2 max-w-6xl overflow-hidden rounded-[1.75rem] p-3 lg:hidden"
-          >
-            {[...mainLinks, ...moreLinks].map((l, i) => (
-              <motion.div
-                key={l.href}
-                initial={{ opacity: 0, x: -14 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.03 * i, type: "spring", stiffness: 300, damping: 26 }}
-              >
-                <Link
-                  href={l.href}
-                  className={cn(
-                    "block rounded-2xl px-4 py-3 text-[15px] font-medium text-ink-soft transition-colors hover:bg-black/[0.05] hover:text-ink dark:text-white/75 dark:hover:bg-white/10 dark:hover:text-white",
-                    pathname === l.href && "bg-black/[0.05] text-ink dark:bg-white/10 dark:text-white"
-                  )}
-                >
-                  {l.label}
-                </Link>
-              </motion.div>
-            ))}
-            <Link
-              href="/join"
-              className="mt-2 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue to-blue-bright px-4 py-3.5 text-sm font-semibold text-white"
-            >
-              <Sparkles className="size-4" />
-              আমাদের পরিবারের অংশ হোন
-            </Link>
-            {isAdmin && <div className="hidden" />}
-          </motion.nav>
-        )}
-      </AnimatePresence>
-    </motion.header>
+    </>
   );
 }
