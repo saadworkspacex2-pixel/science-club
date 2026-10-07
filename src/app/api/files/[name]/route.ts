@@ -22,6 +22,18 @@ const TYPES: Record<string, string> = {
 
 export const dynamic = "force-dynamic";
 
+function responseForStoredFile(row: typeof siteFiles.$inferSelect) {
+  const buffer = Buffer.from(row.data, "base64");
+  return new NextResponse(new Uint8Array(buffer), {
+    headers: {
+      "Content-Type": row.mime || "application/octet-stream",
+      "Content-Length": String(buffer.length),
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Content-Disposition": `inline; filename="${row.name}"`,
+    },
+  });
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ name: string }> }
@@ -50,26 +62,26 @@ export async function GET(
       });
     }
 
-    // 2) Durable database storage fallback (site_files)
+    // Legacy URLs used numeric site_files IDs. Keep serving those through this
+    // single dynamic route so Next.js does not need a competing [id] segment.
+    if (/^\d+$/.test(safe)) {
+      const [legacyRow] = await db
+        .select()
+        .from(siteFiles)
+        .where(eq(siteFiles.id, Number(safe)))
+        .limit(1);
+      if (legacyRow) return responseForStoredFile(legacyRow);
+    }
+
+    // 2) Durable database storage fallback (site_files), addressed by filename
     const [row] = await db
       .select()
       .from(siteFiles)
       .where(eq(siteFiles.name, safe))
       .limit(1);
 
-    if (!row) {
-      return new NextResponse("Not found", { status: 404 });
-    }
-
-    const buffer = Buffer.from(row.data, "base64");
-    return new NextResponse(new Uint8Array(buffer), {
-      headers: {
-        "Content-Type": row.mime || "application/octet-stream",
-        "Content-Length": String(buffer.length),
-        "Cache-Control": "public, max-age=31536000, immutable",
-        "Content-Disposition": `inline; filename="${row.name}"`,
-      },
-    });
+    if (!row) return new NextResponse("Not found", { status: 404 });
+    return responseForStoredFile(row);
   } catch {
     return new NextResponse("Not found", { status: 404 });
   }
