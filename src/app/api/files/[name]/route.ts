@@ -22,14 +22,21 @@ const TYPES: Record<string, string> = {
 
 export const dynamic = "force-dynamic";
 
-function responseForStoredFile(row: typeof siteFiles.$inferSelect) {
-  const buffer = Buffer.from(row.data, "base64");
+function responseForStoredFile(
+  row: typeof siteFiles.$inferSelect,
+  legacyId = false
+) {
+  const base64 = row.data.replace(/^data:[^;]+;base64,/, "");
+  const buffer = Buffer.from(base64, "base64");
+  const fileName = row.name || `file-${row.id}`;
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
-      "Content-Type": row.mime || "application/octet-stream",
+      "Content-Type": row.mime || (legacyId ? "image/jpeg" : "application/octet-stream"),
       "Content-Length": String(buffer.length),
       "Cache-Control": "public, max-age=31536000, immutable",
-      "Content-Disposition": `inline; filename="${row.name}"`,
+      "Content-Disposition": legacyId
+        ? `inline; filename*=UTF-8''${encodeURIComponent(fileName)}`
+        : `inline; filename="${fileName}"`,
     },
   });
 }
@@ -70,7 +77,10 @@ export async function GET(
         .from(siteFiles)
         .where(eq(siteFiles.id, Number(safe)))
         .limit(1);
-      if (legacyRow) return responseForStoredFile(legacyRow);
+      if (legacyRow) {
+        if (!legacyRow.data) return new NextResponse("Not found", { status: 404 });
+        return responseForStoredFile(legacyRow, true);
+      }
     }
 
     // 2) Durable database storage fallback (site_files), addressed by filename
