@@ -330,3 +330,199 @@ body {
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* ==========================================================================
+   Motion system — page transitions, unfold, iOS-style spring, scroll effects
+   Additive: every class below is opt-in via className.
+   ========================================================================== */
+
+/* ---------- Smooth scrolling ---------- */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* ---------- Page transition ---------- */
+@keyframes pageIn {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.994); filter: blur(5px); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+.page-enter {
+  animation: pageIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+/* Soft cross-fade for large section swaps */
+@keyframes softFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.soft-fade { animation: softFade 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ---------- Scroll progress (iOS Safari reading bar) ---------- */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2.5px;
+  width: 100%;
+  z-index: 90;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  pointer-events: none;
+  background: linear-gradient(90deg, #0071e3, #5ac8fa 55%, #34c759);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--brand) 45%, transparent);
+}
+.dark .scroll-progress {
+  background: linear-gradient(90deg, #409cff, #64d2ff 55%, #30d158);
+}
+
+/* ---------- Unfold (iOS-style hinged reveal) ---------- */
+.unfold-base {
+  opacity: 0;
+  transform: perspective(1400px) rotateX(-14deg) translate3d(0, 26px, 0);
+  transform-origin: 50% 0%;
+  transition:
+    opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.unfold-base.is-in {
+  opacity: 1;
+  transform: perspective(1400px) rotateX(0deg) translate3d(0, 0, 0);
+}
+
+/* ---------- Directional reveal variants (pair with .reveal-base) ---------- */
+.reveal-left  { transform: translate3d(-36px, 0, 0) scale(0.985); }
+.reveal-right { transform: translate3d(36px, 0, 0) scale(0.985); }
+.reveal-zoom  { transform: translate3d(0, 0, 0) scale(0.9); }
+.reveal-blur  { transform: none; filter: blur(14px); }
+.reveal-base.is-in { transform: none; }
+
+/* ---------- Staggered children ---------- */
+.stagger > * {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.stagger.is-in > * { opacity: 1; transform: none; }
+.stagger.is-in > *:nth-child(1)  { transition-delay: 40ms; }
+.stagger.is-in > *:nth-child(2)  { transition-delay: 110ms; }
+.stagger.is-in > *:nth-child(3)  { transition-delay: 180ms; }
+.stagger.is-in > *:nth-child(4)  { transition-delay: 250ms; }
+.stagger.is-in > *:nth-child(5)  { transition-delay: 320ms; }
+.stagger.is-in > *:nth-child(6)  { transition-delay: 390ms; }
+.stagger.is-in > *:nth-child(7)  { transition-delay: 460ms; }
+.stagger.is-in > *:nth-child(8)  { transition-delay: 530ms; }
+.stagger.is-in > *:nth-child(9)  { transition-delay: 600ms; }
+.stagger.is-in > *:nth-child(10) { transition-delay: 670ms; }
+.stagger.is-in > *:nth-child(n+11) { transition-delay: 740ms; }
+
+/* ---------- iOS sheet (slide up from bottom) ---------- */
+@keyframes sheetUp {
+  from { transform: translate3d(0, 100%, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+@keyframes sheetScrim {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.sheet-up { animation: sheetUp 0.5s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.sheet-scrim { animation: sheetScrim 0.35s ease-out both; }
+
+/* ---------- Spring press feedback (iPhone tap) ---------- */
+.press {
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.press:active { transform: scale(0.955); }
+.press-sm:active { transform: scale(0.92); }
+.press-lg:active { transform: scale(0.985); }
+
+/* ---------- Spotlight hover glow ---------- */
+.spotlight { position: relative; overflow: hidden; isolation: isolate; }
+.spotlight::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  background: radial-gradient(
+    340px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--brand) 16%, transparent),
+    transparent 65%
+  );
+  pointer-events: none;
+}
+.spotlight:hover::after { opacity: 1; }
+
+/* ---------- Parallax helper (JS writes --py) ---------- */
+.parallax { transform: translate3d(0, var(--py, 0px), 0); will-change: transform; }
+
+/* ---------- Gradient sweep on headings ---------- */
+@keyframes gradientPan {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.text-gradient-animated {
+  background: linear-gradient(120deg, #0071e3, #5ac8fa, #34c759, #5ac8fa, #0071e3);
+  background-size: 250% 250%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientPan 9s ease-in-out infinite;
+}
+.dark .text-gradient-animated {
+  background: linear-gradient(120deg, #409cff, #64d2ff, #30d158, #64d2ff, #409cff);
+  background-size: 250% 250%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Pop-in for badges / small elements ---------- */
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.6); }
+  60%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.pop-in { animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* ---------- Skeleton pulse (loading states) ---------- */
+@keyframes softPulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+.soft-pulse { animation: softPulse 1.6s ease-in-out infinite; }
+
+/* ---------- Reduced motion: neutralise every new animation ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .soft-fade,
+  .sheet-up,
+  .sheet-scrim,
+  .pop-in,
+  .soft-pulse,
+  .text-gradient-animated { animation: none !important; }
+
+  .unfold-base,
+  .stagger > *,
+  .reveal-left,
+  .reveal-right,
+  .reveal-zoom,
+  .reveal-blur {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .press:active,
+  .press-sm:active,
+  .press-lg:active { transform: none !important; }
+
+  .scroll-progress { display: none !important; }
+  .parallax { transform: none !important; }
+}

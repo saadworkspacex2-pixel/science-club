@@ -5,55 +5,57 @@ import { ThemeProvider } from "@/components/theme";
 import FixedLogoOverlays from "@/components/fixed-logo-overlays";
 import { getSiteFont } from "@/lib/branding-config";
 import { getBranding } from "@/lib/settings";
-import { getSeoCanonicalBase, getSeoCanonicalUrl, getSeoSettings, toSeoAbsoluteUrl } from "@/lib/seo-settings";
+import { toAbsoluteUrl } from "@/lib/seo";
+import { getSeoCanonicalBase, getSeoSettings } from "@/lib/seo-settings";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [branding, seo] = await Promise.all([getBranding(), getSeoSettings()]);
+  // Admin-managed SEO values win; every field falls back to the original
+  // branding-derived value when the admin has left it blank.
+  const title = seo.siteTitle || `${branding.clubName} — ${branding.schoolName}`;
+  const description = seo.metaDescription
+    || `${branding.schoolName}, রংপুরের অফিসিয়াল ${branding.clubName}। বিজ্ঞান অলিম্পিয়াড, শিক্ষার্থী অর্জন, প্রকল্প, ক্লাব কার্যক্রম ও সদস্যদের পরিচিতি জানুন।`;
+  const logoUrl = branding.clubLogo ? toAbsoluteUrl(branding.clubLogo) : "";
+  const ogImage = seo.ogImageUrl ? toAbsoluteUrl(seo.ogImageUrl) : logoUrl;
+  const twitterImage = seo.twitterImageUrl ? toAbsoluteUrl(seo.twitterImageUrl) : logoUrl;
+  const googleVerification = seo.googleVerificationCode
+    || process.env.GOOGLE_SITE_VERIFICATION?.trim()
+    || "YYY8OrNn1NTUjHJcVeg-u3eu-1ojBLjXqw8ZW1k9j6Q";
+  const allowIndexing = seo.robots.startsWith("index");
+  const allowFollowing = seo.robots.endsWith(", follow");
   const canonicalBase = getSeoCanonicalBase(seo);
-  const defaultTitle = `${branding.clubName} — ${branding.schoolName}`;
-  const title = seo.siteTitle.trim() || defaultTitle;
-  const defaultDescription = `${branding.schoolName}, রংপুরের অফিসিয়াল ${branding.clubName}। বিজ্ঞান অলিম্পিয়াড, শিক্ষার্থী অর্জন, প্রকল্প, ক্লাব কার্যক্রম ও সদস্যদের পরিচিতি জানুন।`;
-  const description = seo.metaDescription.trim() || defaultDescription;
-  const canonicalUrl = getSeoCanonicalUrl(seo);
-  const logoUrl = branding.clubLogo ? toSeoAbsoluteUrl(branding.clubLogo, canonicalBase) : "";
-  const ogImage = seo.ogImageUrl ? toSeoAbsoluteUrl(seo.ogImageUrl, canonicalBase) : logoUrl;
-  const twitterImage = seo.twitterImageUrl ? toSeoAbsoluteUrl(seo.twitterImageUrl, canonicalBase) : ogImage;
-  const index = seo.robots.startsWith("index");
-  const follow = seo.robots.endsWith(", follow");
   const metadata: Metadata = {
     metadataBase: canonicalBase,
-    alternates: { canonical: canonicalUrl },
     applicationName: branding.clubName,
     title: {
       default: title,
-      template: `%s | ${title}`,
+      template: `%s | ${seo.siteTitle || branding.clubName}`,
     },
     description,
+    alternates: { canonical: seo.canonicalUrl ? canonicalBase.toString() : undefined },
     openGraph: {
-      title: seo.ogTitle.trim() || title,
-      description: seo.ogDescription.trim() || description,
-      url: canonicalUrl,
+      title: seo.ogTitle || title,
+      description: seo.ogDescription || description,
+      url: canonicalBase.toString(),
       siteName: branding.clubName,
       type: "website",
       locale: "bn_BD",
-      ...(ogImage ? { images: [{ url: ogImage, alt: seo.ogTitle.trim() || title }] } : {}),
+      ...(ogImage ? { images: [{ url: ogImage, alt: seo.ogTitle || title }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
-      title: seo.twitterTitle.trim() || seo.ogTitle.trim() || title,
-      description: seo.twitterDescription.trim() || seo.ogDescription.trim() || description,
+      title: seo.twitterTitle || seo.ogTitle || title,
+      description: seo.twitterDescription || seo.ogDescription || description,
       ...(twitterImage ? { images: [twitterImage] } : {}),
     },
-    ...(seo.googleVerificationCode.trim()
-      ? { verification: { google: seo.googleVerificationCode.trim() } }
-      : {}),
+    verification: { google: googleVerification },
     robots: {
-      index,
-      follow,
+      index: allowIndexing,
+      follow: allowFollowing,
       googleBot: {
-        index,
-        follow,
+        index: allowIndexing,
+        follow: allowFollowing,
         "max-image-preview": "large",
         "max-snippet": -1,
         "max-video-preview": -1,
@@ -84,18 +86,16 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const [branding, seo] = await Promise.all([getBranding(), getSeoSettings()]);
-  const googleAnalyticsId = /^G-[A-Z0-9]{6,}$/i.test(seo.googleAnalyticsId)
-    ? seo.googleAnalyticsId.trim()
-    : "";
   const siteFont = getSiteFont(branding.siteFont);
   const fontVariables = {
     "--site-font-sans": siteFont.css,
     "--site-font-display": siteFont.css,
   } as CSSProperties;
-  const canonicalBase = getSeoCanonicalBase(seo);
-  const siteUrl = canonicalBase.toString().replace(/\/$/, "");
+  // Structured data must use the same canonical origin as the metadata,
+  // robots.txt and sitemap — otherwise schema.org points at a different host.
+  const siteUrl = getSeoCanonicalBase(seo).toString().replace(/\/$/, "");
   const organizationId = `${siteUrl}/#organization`;
-  const logoUrl = branding.clubLogo ? toSeoAbsoluteUrl(branding.clubLogo, canonicalBase) : "";
+  const logoUrl = branding.clubLogo ? toAbsoluteUrl(branding.clubLogo) : "";
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -126,6 +126,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     ],
   };
   const structuredDataText = JSON.stringify(structuredData).replace(/</g, "\\u003c");
+  /** GA4 tag is only emitted when the admin has saved a valid Measurement ID. */
+  const analyticsId = /^G-[A-Z0-9]{6,}$/i.test(seo.googleAnalyticsId) ? seo.googleAnalyticsId : "";
 
   return (
     <html lang="bn-BD" suppressHydrationWarning style={fontVariables}>
@@ -139,15 +141,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       </head>
       <body className="min-h-dvh antialiased">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredDataText }} />
-        {googleAnalyticsId && (
+        {analyticsId && (
           <>
             <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(googleAnalyticsId)}`}
+              src={`https://www.googletagmanager.com/gtag/js?id=${analyticsId}`}
               strategy="afterInteractive"
             />
-            <Script id="google-analytics-init" strategy="afterInteractive">
-              {`window.dataLayer = window.dataLayer || [];\nfunction gtag(){window.dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', ${JSON.stringify(googleAnalyticsId)});`}
-            </Script>
+            <Script id="ga4-init" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${analyticsId}');`}</Script>
           </>
         )}
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>

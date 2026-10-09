@@ -22,6 +22,7 @@ import {
   X,
   Globe,
   Bell,
+  Search,
   Settings,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
@@ -43,6 +44,7 @@ export const NAV_ITEMS = [
   { href: "/admin/events", label: "ইভেন্ট", icon: Calendar },
   { href: "/admin/messages", label: "বার্তা", icon: Bell },
   { href: "/admin/settings", label: "সাইট সেটিংস", icon: Settings },
+  { href: "/admin/seo", label: "এসইও সেটিংস", icon: Search },
   { href: "/admin/users", label: "ব্যবহারকারী", icon: ShieldCheck },
 ];
 

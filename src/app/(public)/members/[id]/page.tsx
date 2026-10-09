@@ -21,8 +21,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const [m] = await db.select(memberCompatibleSelection).from(members).where(eq(members.id, Number(id))).limit(1);
   if (!m) return createPageMetadata({ title: "সদস্য পাওয়া যায়নি", description: "এই সদস্য প্রোফাইলটি পাওয়া যায়নি।", path: `/members/${id}`, noIndex: true });
   return createPageMetadata({
-    title: `${m.name} — ${m.role}`,
-    description: m.bio || `${m.name}, ${m.role} — রংপুরের বিউএসএস সাইন্স ক্লাবের সদস্য প্রোফাইল, অর্জন ও অংশগ্রহণ।`,
+    title: m.seoTitle || `${m.name} — ${m.role}`,
+    description: m.seoDescription || m.bio || `${m.name}, ${m.role} — রংপুরের বিউএসএস সাইন্স ক্লাবের সদস্য প্রোফাইল, অর্জন ও অংশগ্রহণ।`,
     path: `/members/${m.id}`,
     image: m.photoUrl || undefined,
   });

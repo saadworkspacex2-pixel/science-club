@@ -8,13 +8,11 @@ import ProjectsFilter from "@/components/projects-filter";
 import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "শিক্ষার্থী বিজ্ঞান প্রকল্প ও গবেষণা",
-    description: "বিউএসএস সাইন্স ক্লাবের শিক্ষার্থীদের বিজ্ঞান প্রকল্প, গবেষণা, উদ্ভাবন ও ভবিষ্যৎ পরিকল্পনা।",
-    path: "/projects",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "শিক্ষার্থী বিজ্ঞান প্রকল্প ও গবেষণা",
+  description: "বিউএসএস সাইন্স ক্লাবের শিক্ষার্থীদের বিজ্ঞান প্রকল্প, গবেষণা, উদ্ভাবন ও ভবিষ্যৎ পরিকল্পনা।",
+  path: "/projects",
+});
 
 export default async function ProjectsPage() {
   const rows = await db.select().from(projects).orderBy(asc(projects.sortOrder));

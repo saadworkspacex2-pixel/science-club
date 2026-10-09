@@ -9,13 +9,11 @@ import { bnDate } from "@/lib/utils";
 import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "সংবাদ, নোটিশ ও ঘোষণা",
-    description: "বিউএসএস সাইন্স ক্লাব, রংপুরের সর্বশেষ সংবাদ, সদস্য নোটিশ, বিজ্ঞান কার্যক্রম ও ঘোষণা।",
-    path: "/news",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "সংবাদ, নোটিশ ও ঘোষণা",
+  description: "বিউএসএস সাইন্স ক্লাব, রংপুরের সর্বশেষ সংবাদ, সদস্য নোটিশ, বিজ্ঞান কার্যক্রম ও ঘোষণা।",
+  path: "/news",
+});
 
 export default async function NewsPage() {
   const rows = await db

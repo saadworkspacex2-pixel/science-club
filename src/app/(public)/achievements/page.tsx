@@ -9,13 +9,11 @@ import { createPageMetadata } from "@/lib/seo";
 import { achievementCompatibleSelection } from "@/lib/compatible-entity-selects";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "বিজ্ঞান অলিম্পিয়াড ও অর্জনসমূহ",
-    description: "রংপুরের বিউএসএস সাইন্স ক্লাবের বিজ্ঞান অলিম্পিয়াড, জাতীয় পুরস্কার, মেডেল এবং শিক্ষার্থীদের সাফল্যের গল্প।",
-    path: "/achievements",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "বিজ্ঞান অলিম্পিয়াড ও অর্জনসমূহ",
+  description: "রংপুরের বিউএসএস সাইন্স ক্লাবের বিজ্ঞান অলিম্পিয়াড, জাতীয় পুরস্কার, মেডেল এবং শিক্ষার্থীদের সাফল্যের গল্প।",
+  path: "/achievements",
+});
 
 export default async function AchievementsPage() {
   const rows = await db.select(achievementCompatibleSelection).from(achievements).orderBy(asc(achievements.sortOrder));

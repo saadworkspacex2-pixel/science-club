@@ -24,6 +24,8 @@ export const achievementCompatibleSelection = {
   description: achievements.description,
   photos: achievements.photos,
   participants: sql<AchievementParticipant[]>`COALESCE(to_jsonb(${achievements}) -> 'participants', '[]'::jsonb)`,
+  seoTitle: sql<string>`COALESCE(to_jsonb(${achievements}) ->> 'seo_title', '')`,
+  seoDescription: sql<string>`COALESCE(to_jsonb(${achievements}) ->> 'seo_description', '')`,
   featured: achievements.featured,
   sortOrder: achievements.sortOrder,
 };
@@ -40,6 +42,8 @@ export const memberCompatibleSelection = {
   achievements: members.achievements,
   participations: members.participations,
   certificates: sql<MemberCertificate[]>`COALESCE(to_jsonb(${members}) -> 'certificates', '[]'::jsonb)`,
+  seoTitle: sql<string>`COALESCE(to_jsonb(${members}) ->> 'seo_title', '')`,
+  seoDescription: sql<string>`COALESCE(to_jsonb(${members}) ->> 'seo_description', '')`,
   whatsapp: members.whatsapp,
   facebook: members.facebook,
   instagram: members.instagram,

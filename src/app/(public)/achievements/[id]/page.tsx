@@ -21,8 +21,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const [a] = await db.select(achievementCompatibleSelection).from(achievements).where(eq(achievements.id, Number(id))).limit(1);
   if (!a) return createPageMetadata({ title: "অর্জন পাওয়া যায়নি", description: "এই অর্জনটি পাওয়া যায়নি।", path: `/achievements/${id}`, noIndex: true });
   return createPageMetadata({
-    title: a.title,
-    description: a.subtitle || a.description || `${a.eventName || "বিজ্ঞান অলিম্পিয়াড"} — বিউএসএস সাইন্স ক্লাবের অর্জন ও শিক্ষার্থীদের ফলাফল।`,
+    title: a.seoTitle || a.title,
+    description: a.seoDescription || a.subtitle || a.description || `${a.eventName || "বিজ্ঞান অলিম্পিয়াড"} — বিউএসএস সাইন্স ক্লাবের অর্জন ও শিক্ষার্থীদের ফলাফল।`,
     path: `/achievements/${a.id}`,
     image: a.coverImage || undefined,
   });

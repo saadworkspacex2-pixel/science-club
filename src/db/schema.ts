@@ -42,6 +42,8 @@ export const achievements = pgTable("achievements", {
   description: text("description").notNull().default(""),
   photos: jsonb("photos").notNull().default(sql`'[]'::jsonb`).$type<string[]>(),
   participants: jsonb("participants").notNull().default(sql`'[]'::jsonb`).$type<AchievementParticipant[]>(),
+  seoTitle: text("seo_title").notNull().default(""),
+  seoDescription: text("seo_description").notNull().default(""),
   featured: boolean("featured").notNull().default(false),
   sortOrder: integer("sort_order").notNull().default(0),
 });
@@ -65,6 +67,8 @@ export const members = pgTable("members", {
   achievements: text("achievements").notNull().default(""),
   participations: text("participations").notNull().default(""),
   certificates: jsonb("certificates").notNull().default(sql`'[]'::jsonb`).$type<MemberCertificate[]>(),
+  seoTitle: text("seo_title").notNull().default(""),
+  seoDescription: text("seo_description").notNull().default(""),
   whatsapp: text("whatsapp").notNull().default(""),
   facebook: text("facebook").notNull().default(""),
   instagram: text("instagram").notNull().default(""),
@@ -94,6 +98,8 @@ export const projects = pgTable("projects", {
   failures: text("failures").notNull().default(""),
   futurePlans: text("future_plans").notNull().default(""),
   date: text("date").notNull().default(""),
+  seoTitle: text("seo_title").notNull().default(""),
+  seoDescription: text("seo_description").notNull().default(""),
   featured: boolean("featured").notNull().default(false),
   sortOrder: integer("sort_order").notNull().default(0),
 });

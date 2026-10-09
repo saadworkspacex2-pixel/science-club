@@ -146,3 +146,176 @@ export function Tilt({
     </div>
   );
 }
+
+/* ---------- Unfold (hinged iOS-style reveal) ---------- */
+export function Unfold({
+  children,
+  delay = 0,
+  className = "",
+  style,
+}: {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            el.classList.add("is-in");
+            io.disconnect();
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -30px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`unfold-base ${className}`}
+      style={{ transitionDelay: `${delay}ms`, ...style }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ---------- Staggered children reveal ---------- */
+export function Stagger({
+  children,
+  className = "",
+  style,
+}: {
+  children: ReactNode;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            el.classList.add("is-in");
+            io.disconnect();
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className={`stagger ${className}`} style={style}>
+      {children}
+    </div>
+  );
+}
+
+/* ---------- Spring press feedback (iPhone tap) ---------- */
+export function Pressable({
+  children,
+  className = "",
+  size = "md",
+  as: Tag = "div",
+}: {
+  children: ReactNode;
+  className?: string;
+  size?: "sm" | "md" | "lg";
+  as?: "div" | "span" | "li" | "article";
+}) {
+  const sizeClass = size === "sm" ? "press-sm" : size === "lg" ? "press-lg" : "";
+  return <Tag className={`press ${sizeClass} ${className}`}>{children}</Tag>;
+}
+
+/* ---------- Parallax on scroll ---------- */
+export function Parallax({
+  children,
+  speed = 0.12,
+  className = "",
+}: {
+  children: ReactNode;
+  speed?: number;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let ticking = false;
+    const update = () => {
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight || 1;
+      // -1 (below viewport) .. 1 (above viewport)
+      const progress = (r.top + r.height / 2 - vh / 2) / vh;
+      el.style.setProperty("--py", `${(-progress * speed * 220).toFixed(2)}px`);
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [speed]);
+
+  return (
+    <div ref={ref} className={`parallax ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+/* ---------- Pointer-tracking spotlight ---------- */
+export function Spotlight({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia("(hover: none)").matches) return;
+
+    const onMove = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    };
+    el.addEventListener("pointermove", onMove);
+    return () => el.removeEventListener("pointermove", onMove);
+  }, []);
+
+  return (
+    <div ref={ref} className={`spotlight ${className}`}>
+      {children}
+    </div>
+  );
+}

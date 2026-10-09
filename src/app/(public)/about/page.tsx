@@ -5,13 +5,11 @@ import { Reveal } from "@/components/motion";
 import { CLUB } from "@/lib/utils";
 import { createPageMetadata } from "@/lib/seo";
 
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "ক্লাব সম্পর্কে",
-    description: "রংপুরের বীর উত্তম শহীদ সমাদ স্কুল অ্যান্ড কলেজের বিউএসএস সাইন্স ক্লাবের লক্ষ্য, ভিশন, বিজ্ঞানচর্চা ও ইতিহাস।",
-    path: "/about",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "ক্লাব সম্পর্কে",
+  description: "রংপুরের বীর উত্তম শহীদ সমাদ স্কুল অ্যান্ড কলেজের বিউএসএস সাইন্স ক্লাবের লক্ষ্য, ভিশন, বিজ্ঞানচর্চা ও ইতিহাস।",
+  path: "/about",
+});
 
 const PILLARS = [
   {

@@ -9,13 +9,11 @@ import { Trophy } from "lucide-react";
 import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "অলিম্পিয়াড বিজয়ীদের হল অফ ফেম",
-    description: "জাতীয় ও আন্তর্জাতিক বিজ্ঞান অলিম্পিয়াডে পুরস্কারপ্রাপ্ত বিউএসএস সাইন্স ক্লাবের শিক্ষার্থীদের পরিচিতি ও অর্জন।",
-    path: "/hall-of-fame",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "অলিম্পিয়াড বিজয়ীদের হল অফ ফেম",
+  description: "জাতীয় ও আন্তর্জাতিক বিজ্ঞান অলিম্পিয়াডে পুরস্কারপ্রাপ্ত বিউএসএস সাইন্স ক্লাবের শিক্ষার্থীদের পরিচিতি ও অর্জন।",
+  path: "/hall-of-fame",
+});
 
 export default async function HallOfFamePage() {
   const rows = await db.select().from(hallOfFame).orderBy(asc(hallOfFame.sortOrder));

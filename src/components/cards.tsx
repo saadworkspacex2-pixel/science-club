@@ -24,7 +24,7 @@ export function AchievementCard({
   return (
     <Link
       href={`/achievements/${a.id}`}
-      className={`group relative block overflow-hidden rounded-3xl shadow-[var(--shadow-soft)] transition-all duration-500 ease-apple hover:-translate-y-2 hover:shadow-[var(--shadow-lift)] ${
+      className={`group press press-lg relative block overflow-hidden rounded-3xl shadow-[var(--shadow-soft)] transition-all duration-500 ease-apple hover:-translate-y-2 hover:shadow-[var(--shadow-lift)] ${
         big ? "aspect-[4/3]" : "aspect-[3/4] sm:aspect-[4/5]"
       }`}
     >
@@ -142,7 +142,7 @@ export function MemberCard({
   return (
     <Link
       href={`/members/${m.id}`}
-      className="glass-card hover-lift group relative block h-full overflow-hidden p-4 text-center sm:p-6"
+      className="glass-card hover-lift press press-lg group relative block h-full overflow-hidden p-4 text-center sm:p-6"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[color-mix(in_srgb,var(--brand)_10%,transparent)] to-transparent" />
       <div className="relative mx-auto w-fit">
@@ -193,7 +193,7 @@ export function ProjectCard({
   return (
     <Link
       href={`/projects/${p.id}`}
-      className="glass-card hover-lift group block overflow-hidden"
+      className="glass-card hover-lift press press-lg group block overflow-hidden"
     >
       <div className="relative aspect-[16/10] overflow-hidden">
         {p.imageUrl ? (
@@ -238,7 +238,7 @@ export function FameCard({
   f: { name: string; photoUrl: string; award: string; year: string; description: string };
 }) {
   return (
-    <div className="hover-lift relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-2xl">
+    <div className="hover-lift press press-lg relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-2xl">
       <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-400/10 blur-2xl" />
       <div className="flex items-start gap-4">
         {f.photoUrl ? (

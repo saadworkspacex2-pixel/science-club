@@ -4,7 +4,8 @@ import { db } from "@/db";
 import { achievements, members, projects } from "@/db/schema";
 import { normalizeMemberCertificates } from "@/lib/member-certificates";
 import { getMemberCertificatesMap } from "@/lib/member-certificates-store";
-import { getSeoSiteUrl } from "@/lib/seo-settings";
+import { getSiteUrl } from "@/lib/seo";
+import { getSeoCanonicalBase, getSeoSettings } from "@/lib/seo-settings";
 import { memberCertificateCompatibleSelection } from "@/lib/compatible-entity-selects";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,9 @@ const PUBLIC_PATHS: Array<{ path: string; frequency: MetadataRoute.Sitemap[numbe
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = await getSeoSiteUrl();
+  // Use the admin-configured canonical origin when one has been saved.
+  const seo = await getSeoSettings();
+  const siteUrl = seo.canonicalUrl ? getSeoCanonicalBase(seo) : getSiteUrl();
   const entry = (path: string, changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"], priority: number) => ({
     url: new URL(path, siteUrl).toString(),
     changeFrequency,

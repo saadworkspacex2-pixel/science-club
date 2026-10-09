@@ -5,13 +5,11 @@ import ContactForm from "@/components/contact-form";
 import { CLUB } from "@/lib/utils";
 import { createPageMetadata } from "@/lib/seo";
 
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "যোগাযোগ — বিজ্ঞান ক্লাব, রংপুর",
-    description: "বীর উত্তম শহীদ সমাদ স্কুল অ্যান্ড কলেজের বিউএসএস সাইন্স ক্লাবের সঙ্গে যোগাযোগ করুন। অবস্থান, ইমেইল ও যোগাযোগের তথ্য দেখুন।",
-    path: "/contact",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "যোগাযোগ — বিজ্ঞান ক্লাব, রংপুর",
+  description: "বীর উত্তম শহীদ সমাদ স্কুল অ্যান্ড কলেজের বিউএসএস সাইন্স ক্লাবের সঙ্গে যোগাযোগ করুন। অবস্থান, ইমেইল ও যোগাযোগের তথ্য দেখুন।",
+  path: "/contact",
+});
 
 const INFO = [
   { icon: MapPin, tint: "#ff375f", label: "ঠিকানা", value: CLUB.location },

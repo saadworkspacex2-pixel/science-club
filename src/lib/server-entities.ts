@@ -25,7 +25,7 @@ export const ENTITY_MAP: Record<string, ServerEntity> = {
   achievements: {
     table: s.achievements as unknown as PgTable & { id: Column },
     order: s.achievements.sortOrder,
-    writable: ["title", "subtitle", "coverImage", "eventName", "organizerInfo", "olympiadWebsite", "mapEmbedUrl", "location", "date", "prizes", "medals", "description", "photos", "participants", "featured", "sortOrder"],
+    writable: ["title", "subtitle", "coverImage", "eventName", "organizerInfo", "olympiadWebsite", "mapEmbedUrl", "location", "date", "prizes", "medals", "description", "photos", "participants", "seoTitle", "seoDescription", "featured", "sortOrder"],
     ints: ["prizes", "medals", "sortOrder"],
     bools: ["featured"],
     search: [s.achievements.title, s.achievements.location, s.achievements.eventName],
@@ -33,7 +33,7 @@ export const ENTITY_MAP: Record<string, ServerEntity> = {
   members: {
     table: s.members as unknown as PgTable & { id: Column },
     order: s.members.sortOrder,
-    writable: ["name", "role", "className", "section", "roll", "photoUrl", "bio", "achievements", "participations", "certificates", "whatsapp", "facebook", "instagram", "isLeadership", "featured", "active", "sortOrder"],
+    writable: ["name", "role", "className", "section", "roll", "photoUrl", "bio", "achievements", "participations", "certificates", "seoTitle", "seoDescription", "whatsapp", "facebook", "instagram", "isLeadership", "featured", "active", "sortOrder"],
     ints: ["sortOrder"],
     bools: ["isLeadership", "featured", "active"],
     search: [s.members.name, s.members.role],
@@ -48,7 +48,7 @@ export const ENTITY_MAP: Record<string, ServerEntity> = {
   projects: {
     table: s.projects as unknown as PgTable & { id: Column },
     order: s.projects.sortOrder,
-    writable: ["title", "imageUrl", "summary", "description", "status", "successes", "failures", "futurePlans", "date", "featured", "sortOrder"],
+    writable: ["title", "imageUrl", "summary", "description", "status", "successes", "failures", "futurePlans", "date", "seoTitle", "seoDescription", "featured", "sortOrder"],
     ints: ["sortOrder"],
     bools: ["featured"],
     search: [s.projects.title],

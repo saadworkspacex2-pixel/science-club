@@ -10,13 +10,11 @@ import { createPageMetadata } from "@/lib/seo";
 import { memberCardCompatibleSelection } from "@/lib/compatible-entity-selects";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "সদস্য ও নেতৃত্ব — রংপুর বিজ্ঞান ক্লাব",
-    description: "বিউএসএস সাইন্স ক্লাবের সভাপতি, সহ-সভাপতি, সাধারণ সম্পাদক ও সদস্যদের প্রোফাইল, কার্যক্রম ও অর্জন।",
-    path: "/members",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "সদস্য ও নেতৃত্ব — রংপুর বিজ্ঞান ক্লাব",
+  description: "বিউএসএস সাইন্স ক্লাবের সভাপতি, সহ-সভাপতি, সাধারণ সম্পাদক ও সদস্যদের প্রোফাইল, কার্যক্রম ও অর্জন।",
+  path: "/members",
+});
 
 export default async function MembersPage() {
   const rows = await db

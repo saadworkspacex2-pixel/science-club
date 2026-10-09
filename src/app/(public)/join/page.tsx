@@ -6,13 +6,11 @@ import { ShieldCheck, Zap, HeartHandshake } from "lucide-react";
 import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "বিজ্ঞান ক্লাবে সদস্য আবেদন",
-    description: "রংপুরের বীর উত্তম শহীদ সমাদ স্কুল অ্যান্ড কলেজের বিজ্ঞান ক্লাবে যোগ দিন। ষষ্ঠ থেকে দশম শ্রেণির শিক্ষার্থীদের সদস্য আবেদন।",
-    path: "/join",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "বিজ্ঞান ক্লাবে সদস্য আবেদন",
+  description: "রংপুরের বীর উত্তম শহীদ সমাদ স্কুল অ্যান্ড কলেজের বিজ্ঞান ক্লাবে যোগ দিন। ষষ্ঠ থেকে দশম শ্রেণির শিক্ষার্থীদের সদস্য আবেদন।",
+  path: "/join",
+});
 
 const PERKS = [
   { icon: ShieldCheck, tint: "#0a84ff", title: "মেন্টরশিপ", desc: "অভিজ্ঞ সিনিয়র ও শিক্ষকদের সরাসরি গাইডলাইন" },

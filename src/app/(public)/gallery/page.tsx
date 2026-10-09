@@ -8,13 +8,11 @@ import GalleryClient from "@/components/gallery-client";
 import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "বিজ্ঞান ক্লাবের ছবি ও ভিডিও গ্যালারি",
-    description: "বিউএসএস সাইন্স ক্লাবের সদস্য, বিজ্ঞান কার্যক্রম, অলিম্পিয়াড ও ইভেন্টের ছবি এবং ভিডিও।",
-    path: "/gallery",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "বিজ্ঞান ক্লাবের ছবি ও ভিডিও গ্যালারি",
+  description: "বিউএসএস সাইন্স ক্লাবের সদস্য, বিজ্ঞান কার্যক্রম, অলিম্পিয়াড ও ইভেন্টের ছবি এবং ভিডিও।",
+  path: "/gallery",
+});
 
 export default async function GalleryPage() {
   const rows = await db.select().from(galleryItems).orderBy(asc(galleryItems.sortOrder));

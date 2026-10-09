@@ -9,13 +9,11 @@ import { bn } from "@/lib/utils";
 import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "বিজ্ঞান ক্লাবের ইভেন্ট ও ক্যালেন্ডার",
-    description: "রংপুরের বিউএসএস সাইন্স ক্লাবের বিজ্ঞান ইভেন্ট, অলিম্পিয়াড, ওয়ার্কশপ ও প্রতিযোগিতার ক্যালেন্ডার।",
-    path: "/events",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "বিজ্ঞান ক্লাবের ইভেন্ট ও ক্যালেন্ডার",
+  description: "রংপুরের বিউএসএস সাইন্স ক্লাবের বিজ্ঞান ইভেন্ট, অলিম্পিয়াড, ওয়ার্কশপ ও প্রতিযোগিতার ক্যালেন্ডার।",
+  path: "/events",
+});
 
 export default async function EventsPage() {
   const rows = await db.select().from(events).orderBy(asc(events.sortOrder));

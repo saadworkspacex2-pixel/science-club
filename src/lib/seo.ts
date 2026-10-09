@@ -30,7 +30,7 @@ function cleanDescription(description: string) {
   return description.replace(/\s+/g, " ").trim().slice(0, 200);
 }
 
-export async function createPageMetadata({
+export function createPageMetadata({
   title,
   description,
   path,
@@ -42,52 +42,36 @@ export async function createPageMetadata({
   path: string;
   image?: string;
   noIndex?: boolean;
-}): Promise<Metadata> {
-  const { getSeoCanonicalBase, getSeoCanonicalUrl, getSeoSettings, toSeoAbsoluteUrl } = await import("@/lib/seo-settings");
-  const seo = await getSeoSettings();
-  const canonicalBase = getSeoCanonicalBase(seo);
-  const pageTitle = path === "/" && seo.siteTitle.trim() ? seo.siteTitle.trim() : title;
-  const summary = cleanDescription(path === "/" && seo.metaDescription.trim() ? seo.metaDescription : description);
-  const canonical = path === "/"
-    ? getSeoCanonicalUrl(seo)
-    : new URL(path, canonicalBase).toString();
-  const pageImage = image ? toSeoAbsoluteUrl(image, canonicalBase) : "";
-  const configuredOgImage = seo.ogImageUrl ? toSeoAbsoluteUrl(seo.ogImageUrl, canonicalBase) : "";
-  const configuredTwitterImage = seo.twitterImageUrl ? toSeoAbsoluteUrl(seo.twitterImageUrl, canonicalBase) : "";
-  const ogImage = configuredOgImage || pageImage;
-  const ogTitle = seo.ogTitle.trim() || pageTitle;
-  const ogDescription = cleanDescription(seo.ogDescription.trim() || summary);
-  const twitterTitle = seo.twitterTitle.trim() || ogTitle;
-  const twitterDescription = cleanDescription(seo.twitterDescription.trim() || ogDescription);
-  const index = seo.robots.startsWith("index");
-  const follow = seo.robots.endsWith(", follow");
-
+}): Metadata {
+  const summary = cleanDescription(description);
+  const imageUrl = image ? toAbsoluteUrl(image) : "";
+  const socialImage = imageUrl ? { images: [{ url: imageUrl, alt: title }] } : {};
   return {
-    title: path === "/" ? { absolute: pageTitle } : pageTitle,
+    title,
     description: summary,
-    alternates: { canonical },
+    alternates: { canonical: path },
     openGraph: {
-      title: ogTitle,
-      description: ogDescription,
-      url: canonical,
+      title,
+      description: summary,
+      url: path,
       type: "website",
       locale: "bn_BD",
-      ...(ogImage ? { images: [{ url: ogImage, alt: ogTitle }] } : {}),
+      ...socialImage,
     },
     twitter: {
       card: "summary_large_image",
-      title: twitterTitle,
-      description: twitterDescription,
-      ...((configuredTwitterImage || ogImage) ? { images: [configuredTwitterImage || ogImage] } : {}),
+      title,
+      description: summary,
+      ...(imageUrl ? { images: [imageUrl] } : {}),
     },
     robots: noIndex
       ? { index: false, follow: false }
       : {
-          index,
-          follow,
+          index: true,
+          follow: true,
           googleBot: {
-            index,
-            follow,
+            index: true,
+            follow: true,
             "max-image-preview": "large",
             "max-snippet": -1,
             "max-video-preview": -1,

@@ -24,7 +24,7 @@ import {
   news,
 } from "@/db/schema";
 import HeroSlider from "@/components/hero-slider";
-import { Reveal, Counter, Tilt } from "@/components/motion";
+import { Reveal, Counter, Tilt, Unfold } from "@/components/motion";
 import { SectionHeading, Monogram } from "@/components/ui";
 import { AchievementCard, MemberCard, FameCard, SponsorTile } from "@/components/cards";
 import ProjectsFilter from "@/components/projects-filter";
@@ -33,13 +33,11 @@ import { createPageMetadata } from "@/lib/seo";
 import { achievementCompatibleSelection, memberCardCompatibleSelection } from "@/lib/compatible-entity-selects";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata() {
-  return createPageMetadata({
-    title: "রংপুরের শিক্ষার্থী বিজ্ঞান ক্লাব",
-    description: "বীর উত্তম শহীদ সমাদ স্কুল অ্যান্ড কলেজের বিউএসএস সাইন্স ক্লাব। বিজ্ঞান অলিম্পিয়াড, শিক্ষার্থীদের উদ্ভাবন, প্রকল্প, অর্জন ও ক্লাব কার্যক্রম দেখুন।",
-    path: "/",
-  });
-}
+export const metadata = createPageMetadata({
+  title: "রংপুরের শিক্ষার্থী বিজ্ঞান ক্লাব",
+  description: "বীর উত্তম শহীদ সমাদ স্কুল অ্যান্ড কলেজের বিউএসএস সাইন্স ক্লাব। বিজ্ঞান অলিম্পিয়াড, শিক্ষার্থীদের উদ্ভাবন, প্রকল্প, অর্জন ও ক্লাব কার্যক্রম দেখুন।",
+  path: "/",
+});
 
 const LEGACY_CATS: Record<string, string> = {
   note: "নোট",
@@ -99,7 +97,7 @@ export default async function HomePage() {
       {/* ===== NEWS STRIP ===== */}
       {newsRows.length > 0 && (
         <section className="mx-auto mt-6 max-w-6xl px-4 sm:mt-8 sm:px-5">
-          <Reveal>
+          <Unfold>
             <Link href="/news" className="glass-card group flex items-center gap-3 overflow-hidden !rounded-2xl px-4 py-3" style={{ boxShadow: "none" }}>
               <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-red-500/10 px-3 py-1.5 text-[12px] font-bold text-red-500">
                 <Bell className="pulse-dot h-3.5 w-3.5" />
@@ -116,7 +114,7 @@ export default async function HomePage() {
                 </div>
               </div>
             </Link>
-          </Reveal>
+          </Unfold>
         </section>
       )}
 
@@ -192,9 +190,9 @@ export default async function HomePage() {
           href="/projects"
           hrefLabel="সব প্রকল্প"
         />
-        <Reveal>
+        <Unfold>
           <ProjectsFilter projects={projRows} />
-        </Reveal>
+        </Unfold>
       </section>
 
       {/* ===== GALLERY PREVIEW ===== */}

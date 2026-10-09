@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const [p] = await db.select().from(projects).where(eq(projects.id, Number(id))).limit(1);
   if (!p) return createPageMetadata({ title: "প্রকল্প পাওয়া যায়নি", description: "এই প্রকল্পটি পাওয়া যায়নি।", path: `/projects/${id}`, noIndex: true });
   return createPageMetadata({
-    title: p.title,
-    description: p.summary || p.description || `বিউএসএস সাইন্স ক্লাবের শিক্ষার্থী বিজ্ঞান প্রকল্প: ${p.title}`,
+    title: p.seoTitle || p.title,
+    description: p.seoDescription || p.summary || p.description || `বিউএসএস সাইন্স ক্লাবের শিক্ষার্থী বিজ্ঞান প্রকল্প: ${p.title}`,
     path: `/projects/${p.id}`,
     image: p.imageUrl || undefined,
   });
